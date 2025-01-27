@@ -1,4 +1,4 @@
-import create from "zustand";
+import { create } from "zustand";
 import usePlaylistStore from "./playlistStore";
 
 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -141,27 +141,33 @@ const useAudioStore = create((set, get) => ({
         playerOptions: { ...state.playerOptions, name: name },
       }));
 
-      const audioContext = get().audioContext;
-      const audio = new Audio();
-      const audioSource = audioContext.createMediaElementSource(audio);
-      const analyser = audioContext.createAnalyser();
+      let { audio, audioSource, analyser, audioContext } = get();
 
-      const analyserOptions = get().analyserOptions;
-      analyser.fftSize = analyserOptions.fftSize;
-      analyser.smoothingTimeConstant = analyserOptions.smoothingTimeConstant;
+      if (audio === null) {
+        audio = new Audio();
+        audioSource = audioContext.createMediaElementSource(audio);
+        analyser = audioContext.createAnalyser();
 
-      audioSource.connect(audioContext.destination);
-      audioSource.connect(analyser);
+        const analyserOptions = get().analyserOptions;
+        analyser.fftSize = analyserOptions.fftSize;
+        analyser.smoothingTimeConstant = analyserOptions.smoothingTimeConstant;
 
-      audio.addEventListener("loadedmetadata", get().audioActions.onAudioLoad);
-      audio.addEventListener(
-        "ended",
-        usePlaylistStore.getState().playlistActions.playNext
-      );
-      audio.addEventListener(
-        "timeupdate",
-        get().audioActions.onAudioTimeUpdate
-      );
+        audioSource.connect(audioContext.destination);
+        audioSource.connect(analyser);
+
+        audio.addEventListener(
+          "loadedmetadata",
+          get().audioActions.onAudioLoad
+        );
+        audio.addEventListener(
+          "ended",
+          usePlaylistStore.getState().playlistActions.playNext
+        );
+        audio.addEventListener(
+          "timeupdate",
+          get().audioActions.onAudioTimeUpdate
+        );
+      }
 
       audio.src = src;
 
@@ -188,14 +194,13 @@ const useAudioStore = create((set, get) => ({
 
     pause: () => {
       const audio = get().audio;
-
       if (audio) {
         audio.pause();
-        set((state) => ({
-          ...state,
-          playerOptions: { ...state.playerOptions, isPlaying: false },
-        }));
       }
+      set((state) => ({
+        ...state,
+        playerOptions: { ...state.playerOptions, isPlaying: false },
+      }));
     },
   },
 }));

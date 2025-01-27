@@ -7,9 +7,9 @@ import usePlaylistStore from "./../store/playlistStore";
 
 const defaultOptions = {
   strokeWidth: 3,
-  amplitude: 6,
-  wavelength: 6,
-  phase: 0.25,
+  amplitude: 5,
+  wavelength: 10,
+  phase: 0.3,
 };
 
 const createSquigglyPath = (
@@ -139,7 +139,7 @@ function CustomSlider({ svgOptions }) {
         onTap={handleTap}
       >
         <motion.div
-          className={`z-10 h-[15px] aspect-square bg-white rounded-full cursor-pointer bg-red-500 cursor-grab `}
+          className={`z-10 h-[15px] aspect-square rounded-full bg-white/100 cursor-grab `}
           ref={thumbRef}
           style={{ x }}
           drag="x"

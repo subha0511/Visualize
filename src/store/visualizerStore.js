@@ -1,4 +1,4 @@
-import create from "zustand";
+import { create } from "zustand";
 
 const useVisualizerStore = create((set, get) => ({
   barVisualizer: {
@@ -47,37 +47,37 @@ const useVisualizerStore = create((set, get) => ({
     },
     rotation: {
       type: "range",
-      value: 8,
+      value: 37.7,
       range: [1, 50],
       label: "Rotation",
     },
     hue: {
       type: "range",
-      value: 70,
+      value: 180,
       range: [0, 255, 1],
       label: "Hue",
     },
     saturation: {
       type: "range",
-      value: 50,
+      value: 75,
       range: [0, 100, 1],
       label: "Saturation",
     },
     lightness: {
       type: "range",
-      value: 50,
+      value: 70,
       range: [0, 100, 1],
       label: "Lightness",
     },
     alpha: {
       type: "range",
-      value: 0.5,
+      value: 0.2,
       range: [0, 1, 0.01],
       label: "Alpha",
     },
     scale: {
       type: "range",
-      value: 1.0,
+      value: 1.8,
       range: [0.5, 5.0, 0.1],
       label: "Scale",
     },
@@ -103,13 +103,13 @@ const useVisualizerStore = create((set, get) => ({
     },
     saturation: {
       type: "range",
-      value: 50,
+      value: 75,
       range: [0, 100, 1],
       label: "Saturation",
     },
     lightness: {
       type: "range",
-      value: 50,
+      value: 70,
       range: [0, 100, 1],
       label: "Lightness",
     },

@@ -1,8 +1,10 @@
-import React, { useState, useId } from "react";
+import React, { useState, useId, useCallback } from "react";
 import useAudioStore from "./store/audioStore";
 import { FiChevronRight } from "react-icons/fi";
-import FileUpload from "./FileUpload";
+import { FaPlus } from "react-icons/fa";
+import AudioList from "./AudioList";
 import useVisualizerStore from "./store/visualizerStore";
+import usePlaylistStore from "./store/playlistStore";
 
 function Sidebar() {
   const [toggleShow, setToggleShow] = useState({
@@ -11,29 +13,53 @@ function Sidebar() {
     visualizerSettings: false,
   });
 
-  const toggleShowPlaylist = () => {
+  const audioFiles = usePlaylistStore((state) => state.audioFiles);
+  const { addAudioFiles } = usePlaylistStore((state) => state.playlistActions);
+
+  const toggleShowPlaylist = useCallback(() => {
     setToggleShow((prev) => ({ ...prev, playlist: !prev.playlist }));
-  };
+  }, [setToggleShow]);
 
-  const toggleShowAudioSettings = () => {
+  const toggleShowAudioSettings = useCallback(() => {
     setToggleShow((prev) => ({ ...prev, audioSettings: !prev.audioSettings }));
-  };
+  }, [setToggleShow]);
 
-  const toggleShowVisualizerSettings = () => {
+  const toggleShowVisualizerSettings = useCallback(() => {
     setToggleShow((prev) => ({
       ...prev,
       visualizerSettings: !prev.visualizerSettings,
     }));
+  }, [setToggleShow]);
+
+  const addAudioHandler = (event) => {
+    addAudioFiles(Array(...event.target.files));
   };
 
   return (
-    <>
-      <div className="p-3 text-lg font-medium text-white/75 border-b border-gray-600">
-        Audio Files
+    <div className="accent-zinc-800 divide-y divide-gray-600 last:border-b border-gray-600">
+      <div className="p-3 text-lg text-white/75 flex items-center">
+        <div className="grow font-semibold">Audio Files</div>
+
+        <div className="group">
+          <label htmlFor="file-upload" className="block cursor-pointer">
+            <div className="h-7 aspect-square rounded-full border border-gray-900 group-hover:border-gray-600 grid place-items-center">
+              <FaPlus size={14} />
+            </div>
+          </label>
+          <input
+            type="file"
+            name="file"
+            id="file-upload"
+            multiple
+            accept=".mp3, .wav"
+            onChange={addAudioHandler}
+            className="hidden"
+          />
+        </div>
       </div>
-      <FileUpload />
+      <AudioList />
       <div
-        className="p-3 text-lg font-medium text-white/75 border-b border-gray-600 inline-flex justify-between items-center w-full cursor-pointer"
+        className="p-3 text-lg font-semibold text-white/75 inline-flex justify-between items-center w-full cursor-pointer"
         onClick={toggleShowAudioSettings}
       >
         Audio Analyser Setting
@@ -44,16 +70,12 @@ function Sidebar() {
           }`}
         />
       </div>
-      {toggleShow.audioSettings && (
-        <div className=" border-b border-gray-600">
-          <AudioOptions />
-        </div>
-      )}
+      {toggleShow.audioSettings && <AudioOptions />}
       <div
-        className="p-3 text-lg font-medium text-white/75 border-b border-gray-600 inline-flex justify-between items-center w-full cursor-pointer"
+        className="p-3 text-lg capitalize font-semibold text-white/75 inline-flex justify-between items-center w-full cursor-pointer"
         onClick={toggleShowVisualizerSettings}
       >
-        Visualizer Setting
+        Visualiser Setting
         <FiChevronRight
           size={24}
           className={` duration-200 ${
@@ -61,14 +83,16 @@ function Sidebar() {
           }`}
         />
       </div>
-      {toggleShow.visualizerSettings && (
-        <>
-          <BarVisualizerOptions />
-          <BezierVisualizerOptions />
-          <SpiralVisualizerOptions />
-        </>
-      )}
-    </>
+      <div className="flex flex-col divide-y divide-gray-300 px-2">
+        {toggleShow.visualizerSettings && (
+          <>
+            <BarVisualizerOptions />
+            <BezierVisualizerOptions />
+            <SpiralVisualizerOptions />
+          </>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -79,7 +103,7 @@ const AudioOptions = () => {
   );
 
   return (
-    <div className="p-3 text-sm flex flex-col text-white/70 gap-2">
+    <div className="pl-5 py-3 pr-3 text-sm flex flex-col text-white/70 gap-2">
       <div className="flex gap-x-5 items-center justify-between">
         <label className="" htmlFor="fftSize">
           Sample Size
@@ -138,19 +162,19 @@ const BarVisualizerOptions = () => {
   );
 
   return (
-    <div className="w-full">
+    <div className="w-full divide-y divide-gray-300">
       <div
-        className="px-3 py-1.5 font-medium text-white/75 border-b border-gray-600 cursor-pointer inline-flex justify-between items-center w-full"
+        className="px-3 py-2 text-white/50 text-sm font-bold cursor-pointer inline-flex justify-between items-center w-full"
         onClick={() => setOpen((prev) => !prev)}
       >
-        Bar Visualizer
+        {"->"} bar visualizer
         <FiChevronRight
           size={20}
           className={`duration-200 ${open ? "rotate-90" : "rotate-0"}`}
         />
       </div>
       {open && (
-        <div className="border-b border-gray-600 px-3 py-2 text-white/70 flex flex-col gap-2">
+        <div className="px-3 py-2 text-white/70 flex flex-col gap-2">
           {Object.keys(barVisualizer).map((key) => (
             <OptionItems
               key={key}
@@ -175,19 +199,19 @@ const SpiralVisualizerOptions = () => {
   );
 
   return (
-    <div className="w-full">
+    <div className="w-full divide-y divide-gray-300">
       <div
-        className="px-3 py-1.5 font-medium text-white/75 border-b border-gray-600 cursor-pointer inline-flex justify-between items-center w-full"
+        className="px-3 py-2 text-sm font-bold text-white/50  cursor-pointer inline-flex justify-between items-center w-full"
         onClick={() => setOpen((prev) => !prev)}
       >
-        Spiral Visualizer
+        {"->"} spiral visualizer
         <FiChevronRight
           size={20}
           className={`duration-200 ${open ? "rotate-90" : "rotate-0"}`}
         />
       </div>
       {open && (
-        <div className="border-b border-gray-600 px-3 py-2 text-white/70 flex flex-col gap-2">
+        <div className=" px-3 py-2 text-white/70 flex flex-col gap-2">
           {Object.keys(spiralVisualizer).map((key) => (
             <OptionItems
               key={key}
@@ -211,19 +235,19 @@ const BezierVisualizerOptions = () => {
     (state) => state.visualizerActions
   );
   return (
-    <div className="w-full">
+    <div className="w-full divide-y divide-gray-300">
       <div
-        className="px-3 py-1.5 font-medium text-white/75 border-b border-gray-600 cursor-pointer inline-flex justify-between items-center w-full"
+        className="px-3 py-2 text-sm font-bold text-white/50 cursor-pointer inline-flex justify-between items-center w-full"
         onClick={() => setOpen((prev) => !prev)}
       >
-        Bezier Visualizer
+        {"->"} bezier visualizer
         <FiChevronRight
           size={20}
           className={`duration-200 ${open ? "rotate-90" : "rotate-0"}`}
         />
       </div>
       {open && (
-        <div className="border-b border-gray-600 px-3 py-2 text-white/70 flex flex-col gap-2">
+        <div className="p-3 text-white/70 flex flex-col gap-2">
           {Object.keys(bezierVisualizer).map((key) => (
             <OptionItems
               key={key}

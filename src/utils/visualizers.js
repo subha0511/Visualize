@@ -8,9 +8,13 @@ export const visualiserBar = (
   options
 ) => {
   let x = 0;
-  let barWidth = canvasWidth / bufferLength;
+
+  let lastNonZero = lastNonzeroIndex(data);
+  let barCount = Math.max(bufferLength / 2, lastNonZero);
+  let barWidth = canvasWidth / barCount;
+
   ctx.fillStyle = `hsla(${options.hue.value},${options.saturation.value}%,${options.lightness.value}%,${options.alpha.value})`;
-  for (let i = 0; i < bufferLength; i++) {
+  for (let i = 0; i < barCount; i++) {
     const barHeight = data[i] * options.scale.value;
     ctx.fillRect(x, canvasHeight - barHeight, barWidth, barHeight);
     x += barWidth;
@@ -33,7 +37,7 @@ export const visualiserSpiral = (
     ctx.translate(canvasWidth / 2, canvasHeight / 2);
     ctx.rotate((i * Math.PI * 2 * options.rotation.value) / bufferLength);
     const barHeight = data[i] * options.scale.value;
-    ctx.fillRect(1, 1, barWidth, barHeight);
+    ctx.fillRect(0, barHeight * 0.25, barWidth, barHeight);
     ctx.restore();
   }
 };
@@ -103,6 +107,7 @@ export const visualiserBezierLine = (
   ctx.translate(canvasWidth / 2, canvasHeight / 2);
   ctx.beginPath();
   ctx.moveTo(roundedData[0].x, roundedData[0].y);
+
   let i;
   for (i = 1; i < bufferLength - 2; i++) {
     let xc = (roundedData[i].x + roundedData[i + 1].x) / 2;
@@ -191,10 +196,14 @@ export const getRoundCoordinate = (
   scale = 1
 ) => {
   const newArray = [];
+  const dataLength = data.length;
+  const bass = data.slice(0, dataLength / 3);
+  const mean = data.reduce((t, c) => t + c, 0) / data.length;
+  const customScale = scale * mean * 0.025;
   for (let i = 0; i < bufferLength; i++) {
     const deg = (i * rotation * Math.PI * 2) / bufferLength;
-    const x = data[i] * scale * Math.cos(deg);
-    const y = data[i] * scale * Math.sin(deg);
+    const x = data[i] * customScale * Math.cos(deg);
+    const y = data[i] * customScale * Math.sin(deg);
     newArray.push({ x, y });
   }
   return newArray;

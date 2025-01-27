@@ -1,4 +1,4 @@
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useCallback } from "react";
 import useRect from "./hooks/useRect";
 import {
   visualiserBezierLine,
@@ -7,12 +7,14 @@ import {
 } from "./utils/visualizers";
 import useAudioStore from "./store/audioStore";
 import useVisualizerStore from "./store/visualizerStore";
-import shallow from "zustand/shallow";
+import { shallow } from "zustand/shallow";
 
 function Visualiser({ parentRef }) {
   const { isPlaying } = useAudioStore((state) => state.playerOptions);
   const { bufferLength } = useAudioStore((state) => state.analyserOptions);
   const analyser = useAudioStore((state) => state.analyser);
+
+  const frameRef = useRef();
 
   const canvasRef = useRef();
   const { width, height } = useRect(parentRef);
@@ -31,6 +33,7 @@ function Visualiser({ parentRef }) {
     }),
     shallow
   );
+
   const visualizerOptionsRef = useRef(visualizerOptions);
 
   useEffect(() => {
@@ -47,7 +50,7 @@ function Visualiser({ parentRef }) {
   }, [bufferLength]);
 
   const draw = () => {
-    if (!canvasRef || pauseCanvasRef.current) return;
+    if (!canvasRef) return;
     const ctx = canvasRef.current.getContext("2d");
     const canvasHeight = canvasRef.current.height;
     const canvasWidth = canvasRef.current.width;
@@ -63,16 +66,6 @@ function Visualiser({ parentRef }) {
         visualizerOptionsRef.current.barVisualizer
       );
     }
-    if (visualizerOptionsRef.current.bezierVisualizer.show.value) {
-      visualiserBezierLine(
-        ctx,
-        canvasWidth,
-        canvasHeight,
-        bufferLengthRef.current,
-        dataArray.current,
-        visualizerOptionsRef.current.bezierVisualizer
-      );
-    }
     if (visualizerOptionsRef.current.spiralVisualizer.show.value) {
       visualiserSpiral(
         ctx,
@@ -83,21 +76,31 @@ function Visualiser({ parentRef }) {
         visualizerOptionsRef.current.spiralVisualizer
       );
     }
+    if (visualizerOptionsRef.current.bezierVisualizer.show.value) {
+      visualiserBezierLine(
+        ctx,
+        canvasWidth,
+        canvasHeight,
+        bufferLengthRef.current,
+        dataArray.current,
+        visualizerOptionsRef.current.bezierVisualizer
+      );
+    }
   };
 
-  const loopingAnimation = () => {
-    if (isPlaying && analyser) {
-      requestAnimationFrame(loopingAnimation);
+  const loopingAnimation = useCallback(() => {
+    if (analyserRef.current) {
       analyserRef.current.getByteFrequencyData(dataArray.current);
       draw(dataArray.current);
+      frameRef.current = requestAnimationFrame(loopingAnimation);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    pauseCanvasRef.current = !isPlaying;
     if (isPlaying) {
-      loopingAnimation();
+      frameRef.current = requestAnimationFrame(loopingAnimation);
     }
+    return () => cancelAnimationFrame(frameRef.current);
   }, [isPlaying]);
 
   return <canvas ref={canvasRef} height={height} width={width} />;

@@ -1,4 +1,5 @@
-import create from "zustand";
+import { create } from "zustand";
+import useAudioStore from "./audioStore";
 
 const usePlaylistStore = create((set, get) => ({
   audioFiles: [],
@@ -8,7 +9,9 @@ const usePlaylistStore = create((set, get) => ({
   playlistActions: {
     playNext: () => {
       const audioFiles = get().audioFiles;
-      if (!audioFiles) return;
+      if (!audioFiles) {
+        return;
+      }
       const nextIndex = (get().currentIndex + 1) % audioFiles.length;
       set((state) => ({ ...state, currentIndex: nextIndex }));
     },
